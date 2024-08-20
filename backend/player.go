@@ -23,7 +23,7 @@ func (Player p) getCoordinates() (int64, int64) {
 	return PosX, PosY
 }
 
-func (Player p) takeDamage(damage int64) int64 {
+func (Player *p) takeDamage(damage int64) int64 {
 	if(damage > p.Health){
 		p.Alive = false
 	} else {
