@@ -1,9 +1,15 @@
 package backend
 
 type Game struct {
-	Players []int64
+	Players map[int64]*Player
 }
 
-func (Game g) getPlayers() int64 {
+func (Game g) GetPlayers() int64 {
 	return g.Players
+}
+
+func CreateGame() *Game {
+	return &Game{
+		Players: make(map[int64]Player)
+	}
 }

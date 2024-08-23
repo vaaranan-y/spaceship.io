@@ -9,6 +9,7 @@ type Player struct {
 	Health int64
 	Damage int64
 	Alive bool
+	Conn *websocket.Conn
 }
 
 func (Player p) getHealth() int64 {
