@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"github.com/gorilla/websocket"
-	// "./game"
 )
 
 var upgrader = websocket.Upgrader{
@@ -14,7 +13,9 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin: func (r *http.Request) bool { return true }, // Accept all clients for now
 }
 
-// var game = game.CreateGame()
+var game = CreateGame()
+var newPlayerId int64
+
 
 func reader(conn *websocket.Conn){
 	for {
@@ -58,7 +59,32 @@ func testEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprintf(w, "Hello, world!")
+}
 
+func playerConnectionEndpoint(w http.ResponseWriter, r *http.Request){
+	wsConn, err := upgrader.Upgrade(w, r, nil)
+
+	if(err != nil){
+		http.Error(w, "Unsupported Method", http.StatusNotFound)
+	} 
+
+	defer wsConn.Close()
+
+	
+	player := &Player{
+		ID: newPlayerId,
+		NickName: "",
+		GameID: 0,
+		PosX: 0,
+		PosY: 0,
+		Health: 100,
+		Damage: 5,
+		Alive: true,
+		Conn: wsConn,
+	}
+	newPlayerId = newPlayerId + 1
+
+	game.AddPlayer(player)
 }
 
 func main(){
@@ -66,6 +92,7 @@ func main(){
 	http.HandleFunc("/hello", testEndpoint)
 	http.HandleFunc("/ws", webSocketEndpoint)
 
+	newPlayerId = 0
 	// Start Server
 	fmt.Printf("Starting Server at Port 8080\n")
 	err := http.ListenAndServe(":8080", nil)
