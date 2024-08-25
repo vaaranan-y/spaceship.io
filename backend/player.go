@@ -1,4 +1,8 @@
-package backend
+package main
+
+import (
+	"github.com/gorilla/websocket"
+)
 
 type Player struct {
 	ID int64
@@ -12,19 +16,19 @@ type Player struct {
 	Conn *websocket.Conn
 }
 
-func (Player p) getHealth() int64 {
+func (p *Player) getHealth() int64 {
 	return p.Health
 }
 
-func (Player p) getDamageCapability() int64 {
+func (p *Player) getDamageCapability() int64 {
 	return p.Damage
 }
 
-func (Player p) getCoordinates() (int64, int64) {
-	return PosX, PosY
+func (p *Player) getCoordinates() (float64, float64) {
+	return p.PosX, p.PosY
 }
 
-func (Player *p) takeDamage(damage int64) int64 {
+func (p *Player) takeDamage(damage int64) {
 	if(damage > p.Health){
 		p.Alive = false
 	} else {
