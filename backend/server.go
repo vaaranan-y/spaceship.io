@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"github.com/gorilla/websocket"
+	// "./game"
 )
 
 var upgrader = websocket.Upgrader{
@@ -12,6 +13,8 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 	CheckOrigin: func (r *http.Request) bool { return true }, // Accept all clients for now
 }
+
+// var game = game.CreateGame()
 
 func reader(conn *websocket.Conn){
 	for {
