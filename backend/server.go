@@ -36,40 +36,11 @@ func reader(conn *websocket.Conn){
 	}
 }
 
-func webSocketEndpoint(w http.ResponseWriter, r *http.Request){
-	wsConn, err := upgrader.Upgrade(w, r, nil)
-
-	if(err != nil){
-		http.Error(w, "Unsupported Method", http.StatusNotFound)
-	} 
-
-	reader(wsConn)
-}
-
-func testEndpoint(w http.ResponseWriter, r *http.Request) {
-
-	if(r.URL.Path != "/hello"){
-		http.Error(w, "404 Not Found", http.StatusNotFound)
-		return
-	}
-
-	if(r.Method != "GET"){
-		http.Error(w, "Unsupported Method", http.StatusBadRequest)
-		return
-	}
-
-	fmt.Fprintf(w, "Hello, world!")
-}
-
 func playerConnectionEndpoint(w http.ResponseWriter, r *http.Request){
 	wsConn, err := upgrader.Upgrade(w, r, nil)
-
 	if(err != nil){
 		http.Error(w, "Unsupported Method", http.StatusNotFound)
 	} 
-
-	defer wsConn.Close()
-
 	
 	player := &Player{
 		ID: newPlayerId,
@@ -83,16 +54,18 @@ func playerConnectionEndpoint(w http.ResponseWriter, r *http.Request){
 		Conn: wsConn,
 	}
 	newPlayerId = newPlayerId + 1
-
+	
 	game.AddPlayer(player)
+
+	fmt.Printf("Player %v has joined!\n", player.ID)
+	reader(wsConn)
+	defer wsConn.Close()
 }
 
 func main(){
 	// Set up routes
-	http.HandleFunc("/hello", testEndpoint)
-	http.HandleFunc("/ws", webSocketEndpoint)
+	http.HandleFunc("/join", playerConnectionEndpoint)
 
-	newPlayerId = 0
 	// Start Server
 	fmt.Printf("Starting Server at Port 8080\n")
 	err := http.ListenAndServe(":8080", nil)
