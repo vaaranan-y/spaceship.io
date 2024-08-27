@@ -17,25 +17,6 @@ var game = CreateGame()
 var newPlayerId int64
 
 
-func reader(conn *websocket.Conn){
-	for {
-		// Receive Message
-		messageType, p, err := conn.ReadMessage()
-		if err != nil {
-			log.Fatal(err)
-			return
-		}
-		fmt.Printf("Message Received: %s\n", p)
-
-		// Echo Message
-		err = conn.WriteMessage(messageType, p)
-		if(err != nil){
-			log.Fatal(err)
-			return
-		}
-	}
-}
-
 func playerConnectionEndpoint(w http.ResponseWriter, r *http.Request){
 	wsConn, err := upgrader.Upgrade(w, r, nil)
 	if(err != nil){
@@ -58,7 +39,24 @@ func playerConnectionEndpoint(w http.ResponseWriter, r *http.Request){
 	game.AddPlayer(player)
 
 	fmt.Printf("Player %v has joined!\n", player.ID)
-	reader(wsConn)
+
+	for {
+		// Receive Message
+		messageType, p, err := wsConn.ReadMessage()
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+		fmt.Printf("Message Received: %s\n", p)
+
+		// Echo Message
+		err = wsConn.WriteMessage(messageType, p)
+		if(err != nil){
+			log.Fatal(err)
+			return
+		}
+	}
+
 	defer wsConn.Close()
 }
 
