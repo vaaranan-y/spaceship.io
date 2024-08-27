@@ -15,6 +15,7 @@ var upgrader = websocket.Upgrader{
 
 var game = CreateGame()
 var newPlayerId int64
+var playerCount int64
 
 
 func playerConnectionEndpoint(w http.ResponseWriter, r *http.Request){
@@ -34,7 +35,8 @@ func playerConnectionEndpoint(w http.ResponseWriter, r *http.Request){
 		Alive: true,
 		Conn: wsConn,
 	}
-	newPlayerId = newPlayerId + 1
+	newPlayerId += 1
+	playerCount += 1
 	
 	game.AddPlayer(player)
 
@@ -48,12 +50,16 @@ func playerConnectionEndpoint(w http.ResponseWriter, r *http.Request){
 			return
 		}
 		fmt.Printf("Message Received: %s\n", p)
+		messageContent := string(p)
 
-		// Echo Message
-		err = wsConn.WriteMessage(messageType, p)
-		if(err != nil){
-			log.Fatal(err)
-			return
+		if(messageContent == "info"){
+			// Echo Message
+			message := fmt.Sprintf("here are currently %d player(s)", playerCount)
+			err = wsConn.WriteMessage(messageType, []byte(message))
+			if(err != nil){
+				log.Fatal(err)
+				return
+			}
 		}
 	}
 
@@ -65,6 +71,8 @@ func main(){
 	http.HandleFunc("/join", playerConnectionEndpoint)
 
 	// Start Server
+	newPlayerId = 0
+	playerCount = 0
 	fmt.Printf("Starting Server at Port 8080\n")
 	err := http.ListenAndServe(":8080", nil)
 	if(err != nil){
