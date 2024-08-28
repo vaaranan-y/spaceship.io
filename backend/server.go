@@ -26,7 +26,7 @@ func playerConnectionEndpoint(w http.ResponseWriter, r *http.Request){
 	
 	player := &Player{
 		ID: newPlayerId,
-		NickName: "",
+		NickName: "Temp",
 		GameID: 0,
 		PosX: 0,
 		PosY: 0,
@@ -37,6 +37,17 @@ func playerConnectionEndpoint(w http.ResponseWriter, r *http.Request){
 	}
 	newPlayerId += 1
 	playerCount += 1
+	newPlayerAlertMessage := fmt.Sprintf("A new player has joined!")
+	for _, player := range game.Players {
+		playerConn := player.Conn
+		playerConn.WriteMessage(websocket.TextMessage, []byte(newPlayerAlertMessage))
+	}
+
+	// err = wsConn.WriteMessage(messageType, []byte(message))
+	// if(err != nil){
+	// 	log.Fatal(err)
+	// 	return
+	// }
 	
 	game.AddPlayer(player)
 
@@ -54,7 +65,7 @@ func playerConnectionEndpoint(w http.ResponseWriter, r *http.Request){
 
 		if(messageContent == "info"){
 			// Echo Message
-			message := fmt.Sprintf("here are currently %d player(s)", playerCount)
+			message := fmt.Sprintf("There are currently %d player(s)", playerCount)
 			err = wsConn.WriteMessage(messageType, []byte(message))
 			if(err != nil){
 				log.Fatal(err)
