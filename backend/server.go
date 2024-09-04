@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 	"github.com/gorilla/websocket"
-	// "time"
+	"time"
 )
 
 var upgrader = websocket.Upgrader{
@@ -73,32 +73,23 @@ func playerConnectionEndpoint(w http.ResponseWriter, r *http.Request){
 }
 
 func gameLoop(game *Game) {
-	// ticker := time.NewTicker(time.Second)
-    // defer ticker.Stop()
+	tick := time.Tick(16*time.Millisecond)
 	// alertStart := false
 
-    // for range ticker.C {
-    //     // if game.GameState != "in_progress" {
-    //     //     return
-    //     // }
-
-	// 	if(playerCount >= 3 && !alertStart){
-	// 		alertStart = true
-	// 		newPlayerAlertMessage := fmt.Sprintf("At least three players have joined, the game will begin momentarily")
-	// 		for _, player := range game.Players {
-	// 			playerConn := player.Conn
-	// 			playerConn.WriteMessage(websocket.TextMessage, []byte(newPlayerAlertMessage))
-	// 		}
-	// 	}
-
-    //     // Update game state, check for win conditions, etc.
-
-    //     // Example: broadcast game state to all players
-    //     // broadcastGameState(game)
-    // }
-
-	for{
-		fmt.Printf("Game Loop")
+	for t := range tick {
+		fmt.Printf("Game Loop Update: %v\n", t)
+		// if game.GameState != "in_progress" {
+        //     return
+        // }
+		
+		// if(playerCount >= 3 && !alertStart){
+		// 	alertStart = true
+		// 	newPlayerAlertMessage := fmt.Sprintf("At least three players have joined, the game will begin momentarily!")
+		// 	for _, player := range game.Players {
+		// 		playerConn := player.Conn
+		// 		playerConn.WriteMessage(websocket.TextMessage, []byte(newPlayerAlertMessage))
+		// 	}
+		// }
 	}
 }
 
