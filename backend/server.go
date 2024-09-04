@@ -74,22 +74,19 @@ func playerConnectionEndpoint(w http.ResponseWriter, r *http.Request){
 
 func gameLoop(game *Game) {
 	tick := time.Tick(16*time.Millisecond)
-	// alertStart := false
+	alertStart := false
 
 	for t := range tick {
 		fmt.Printf("Game Loop Update: %v\n", t)
-		// if game.GameState != "in_progress" {
-        //     return
-        // }
 		
-		// if(playerCount >= 3 && !alertStart){
-		// 	alertStart = true
-		// 	newPlayerAlertMessage := fmt.Sprintf("At least three players have joined, the game will begin momentarily!")
-		// 	for _, player := range game.Players {
-		// 		playerConn := player.Conn
-		// 		playerConn.WriteMessage(websocket.TextMessage, []byte(newPlayerAlertMessage))
-		// 	}
-		// }
+		if(playerCount >= 3 && !alertStart){
+			alertStart = true
+			newPlayerAlertMessage := fmt.Sprintf("At least three players have joined, the game will begin momentarily!")
+			for _, player := range game.Players {
+				playerConn := player.Conn
+				playerConn.WriteMessage(websocket.TextMessage, []byte(newPlayerAlertMessage))
+			}
+		}
 	}
 }
 

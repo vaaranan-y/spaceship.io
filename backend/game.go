@@ -2,6 +2,7 @@ package main
 
 type Game struct {
 	Players map[int64]*Player
+	GameState string
 }
 
 func (g *Game) GetPlayers() map[int64]*Player {
@@ -11,6 +12,7 @@ func (g *Game) GetPlayers() map[int64]*Player {
 func CreateGame() *Game {
 	return &Game{
 		Players: make(map[int64]*Player),
+		GameState: "waiting",
 	}
 }
 
