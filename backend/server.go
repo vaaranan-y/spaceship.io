@@ -93,7 +93,7 @@ func gameLoop(game *Game) {
 		} else if(gameStarted && time.Now().After(gameStartTime)) {
 			playerPositionsMsg := "Players\n"
 			for _, player := range game.Players {
-				playerPositionsMsg += fmt.Sprintf("Player %v: (%v, %v) ", player.ID, player.PosX, player.PosY)
+				playerPositionsMsg += fmt.Sprintf("Player %v Coordinates: (%v, %v) ", player.ID, player.PosX, player.PosY)
 			}
 			for _, player := range game.Players {
 				playerConn := player.Conn
