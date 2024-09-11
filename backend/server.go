@@ -17,6 +17,8 @@ var upgrader = websocket.Upgrader{
 var game = CreateGame()
 var newPlayerId int64
 var playerCount int64
+var gameStarted bool
+var gameStartTime time.Time
 
 
 func playerConnectionEndpoint(w http.ResponseWriter, r *http.Request){
@@ -73,7 +75,7 @@ func playerConnectionEndpoint(w http.ResponseWriter, r *http.Request){
 }
 
 func gameLoop(game *Game) {
-	tick := time.Tick(16*time.Millisecond)
+	tick := time.Tick(1000*time.Millisecond)
 	alertStart := false
 
 	for t := range tick {
@@ -86,6 +88,18 @@ func gameLoop(game *Game) {
 				playerConn := player.Conn
 				playerConn.WriteMessage(websocket.TextMessage, []byte(newPlayerAlertMessage))
 			}
+			gameStarted = true
+			gameStartTime = time.Now().Add(5 * time.Second)
+		} else if(gameStarted && time.Now().After(gameStartTime)) {
+			playerPositionsMsg := "Players\n"
+			for _, player := range game.Players {
+				playerPositionsMsg += fmt.Sprintf("Player %v: (%v, %v) ", player.ID, player.PosX, player.PosY)
+			}
+			for _, player := range game.Players {
+				playerConn := player.Conn
+				playerConn.WriteMessage(websocket.TextMessage, []byte(playerPositionsMsg))
+			}
+
 		}
 	}
 }
