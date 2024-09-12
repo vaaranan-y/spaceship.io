@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"github.com/gorilla/websocket"
 	"time"
+	"encoding/json"
 )
 
 var upgrader = websocket.Upgrader{
@@ -19,6 +20,12 @@ var newPlayerId int64
 var playerCount int64
 var gameStarted bool
 var gameStartTime time.Time
+type PositionMessage struct {
+	Type string  `json:"type"`
+	ID   int64 `json:"id"`
+	X    float64 `json:"x"`
+	Y    float64 `json:"y"`
+}
 
 
 func playerConnectionEndpoint(w http.ResponseWriter, r *http.Request){
@@ -67,6 +74,18 @@ func playerConnectionEndpoint(w http.ResponseWriter, r *http.Request){
 			if(err != nil){
 				log.Fatal(err)
 				return
+			}
+		} else {
+			// Position Update
+			var posnMsg PositionMessage
+			err = json.Unmarshal(p, &posnMsg)
+			if err != nil {
+				log.Println("Error: ", err)
+				continue
+			}
+			if posnMsg.Type == "update_position" {
+				game.Players[posnMsg.ID].PosX = posnMsg.X
+				game.Players[posnMsg.ID].PosY = posnMsg.Y
 			}
 		}
 	}
