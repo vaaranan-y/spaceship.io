@@ -14,12 +14,12 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 	CheckOrigin: func (r *http.Request) bool { return true }, // Accept all clients for now
 }
-
 var game = CreateGame()
 var newPlayerId int64
 var playerCount int64
 var gameStarted bool
 var gameStartTime time.Time
+
 type PositionMessage struct {
 	Type string  `json:"type"`
 	ID   int64 `json:"id"`
@@ -29,11 +29,11 @@ type PositionMessage struct {
 
 
 func playerConnectionEndpoint(w http.ResponseWriter, r *http.Request){
+	// Create WebSocket Connection for Player
 	wsConn, err := upgrader.Upgrade(w, r, nil)
 	if(err != nil){
 		http.Error(w, "Unsupported Method", http.StatusNotFound)
 	} 
-	
 	player := &Player{
 		ID: newPlayerId,
 		NickName: "Temp",
@@ -45,6 +45,8 @@ func playerConnectionEndpoint(w http.ResponseWriter, r *http.Request){
 		Alive: true,
 		Conn: wsConn,
 	}
+
+	// Update global data for application, and alert all players of new player
 	newPlayerId += 1
 	playerCount += 1
 	newPlayerAlertMessage := fmt.Sprintf("A new player has joined!")
@@ -52,11 +54,10 @@ func playerConnectionEndpoint(w http.ResponseWriter, r *http.Request){
 		playerConn := player.Conn
 		playerConn.WriteMessage(websocket.TextMessage, []byte(newPlayerAlertMessage))
 	}
-
 	game.AddPlayer(player)
-
 	fmt.Printf("Player %v has joined!\n", player.ID)
 
+	// Accept messages from the player
 	for {
 		// Receive Message
 		messageType, p, err := wsConn.ReadMessage()
@@ -67,26 +68,26 @@ func playerConnectionEndpoint(w http.ResponseWriter, r *http.Request){
 		fmt.Printf("Message Received: %s\n", p)
 		messageContent := string(p)
 
-		if(messageContent == "info"){
-			// Echo Message
-			message := fmt.Sprintf("There are currently %d player(s)", playerCount)
-			err = wsConn.WriteMessage(messageType, []byte(message))
-			if(err != nil){
-				log.Fatal(err)
-				return
-			}
-		} else {
-			// Position Update
-			var posnMsg PositionMessage
-			err = json.Unmarshal(p, &posnMsg)
-			if err != nil {
-				log.Println("Error: ", err)
-				continue
-			}
-			if posnMsg.Type == "update_position" {
-				game.Players[posnMsg.ID].PosX = posnMsg.X
-				game.Players[posnMsg.ID].PosY = posnMsg.Y
-			}
+		// Handle Message
+		switch messageContent {
+			case "info":
+				message := fmt.Sprintf("There are currently %d player(s)", playerCount)
+				err = wsConn.WriteMessage(messageType, []byte(message))
+				if(err != nil){
+					log.Fatal(err)
+					return
+				}
+			default:
+				var posnMsg PositionMessage
+				err = json.Unmarshal(p, &posnMsg)
+				if err != nil {
+					log.Println("Error: ", err)
+					continue
+				}
+				if posnMsg.Type == "update_position" {
+					game.Players[posnMsg.ID].PosX = posnMsg.X
+					game.Players[posnMsg.ID].PosY = posnMsg.Y
+				}
 		}
 	}
 
@@ -123,15 +124,13 @@ func gameLoop(game *Game) {
 	}
 }
 
-func startServer(){
+func setUpRoutes(){
+	// Add all routes here
 	http.HandleFunc("/join", playerConnectionEndpoint)
+}
 
-	// Start Server
-	newPlayerId = 0
-	playerCount = 0
-
-	
-
+func startServer(){
+	// Start the server on port 8080
 	fmt.Printf("Starting Server at Port 8080\n")
 	err := http.ListenAndServe(":8080", nil)
 	if(err != nil){
@@ -141,6 +140,9 @@ func startServer(){
 
 func main(){
 	// Set up routes
+	newPlayerId = 0
+	playerCount = 0
+	setUpRoutes()
 	go startServer()
 	go gameLoop(game)
 	select {}
