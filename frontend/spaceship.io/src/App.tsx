@@ -20,10 +20,7 @@ function App() {
   
   return (
     <div className="App">
-      <div className="TitleCard">
-      SPACESHIP.IO
-      </div>
-      <Spaceship x={x} y={y}/>
+      <Spaceship/>
     </div>
   );
 }
