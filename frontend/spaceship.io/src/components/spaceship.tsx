@@ -12,18 +12,11 @@ export default function Soaceship() {
 
   const draw = (p5: p5Types) => {
     p5.background(100);
-    
-    const dirX = p5.mouseX - position.x;
-    const dirY = p5.mouseY - position.y;
-    const angle = Math.atan2(dirY, dirX);
-    
-    const velX = Math.cos(angle) * maxSpeed;
-    const velY = Math.sin(angle) * maxSpeed;
 
-    setPosition(prev => ({
-      x: prev.x + velX,
-      y: prev.y + velY,
-    }));
+    let vel = p5.createVector(p5.mouseX, p5.mouseY);
+    vel.sub(p5.createVector(position.x, position.y))
+    vel.setMag(maxSpeed)
+    setPosition({x: position.x + vel.x, y: position.y + vel.y})
 
     p5.fill(0);
     p5.rect(position.x, position.y, 50, 50);
