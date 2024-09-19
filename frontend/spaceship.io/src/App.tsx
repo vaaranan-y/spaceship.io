@@ -2,12 +2,17 @@ import React, { useEffect, useState } from 'react';
 import Spaceship from './components/spaceship';
 import './App.css';
 
-function App() {
+export default function App() {
+  const [players, setPlayers]  = useState([])
   return (
     <div className="App">
-      <Spaceship/>
+      {
+        players.map((player, index) => {
+          return (
+            <Spaceship/>
+          );
+        })
+      }
     </div>
   );
 }
-
-export default App;
