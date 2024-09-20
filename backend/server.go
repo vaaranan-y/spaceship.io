@@ -27,6 +27,15 @@ type PositionMessage struct {
 	Y    float64 `json:"y"`
 }
 
+func jsonifyData(message interface{}) []byte {
+	jsonMsg, err := json.Marshal(message)
+    if err != nil {
+		fmt.Printf("Error jsonifying message!");
+        return nil
+    }
+    return jsonMsg
+}
+
 
 func playerConnectionEndpoint(w http.ResponseWriter, r *http.Request){
 	// Create WebSocket Connection for Player
@@ -49,11 +58,16 @@ func playerConnectionEndpoint(w http.ResponseWriter, r *http.Request){
 	// Update global data for application, and alert all players of new player
 	newPlayerId += 1
 	playerCount += 1
-	newPlayerAlertMessage := fmt.Sprintf("A new player has joined!")
+	newPlayerAlertMessage := jsonifyData(map[string]string{
+		"type":    "player_alert",
+		"message": "At least three players have joined, the game will begin momentarily!",
+	})
+
 	for _, player := range game.Players {
 		playerConn := player.Conn
-		playerConn.WriteMessage(websocket.TextMessage, []byte(newPlayerAlertMessage))
+		playerConn.WriteMessage(websocket.TextMessage, newPlayerAlertMessage)
 	}
+
 	game.AddPlayer(player)
 	fmt.Printf("Player %v has joined!\n", player.ID)
 
@@ -71,8 +85,12 @@ func playerConnectionEndpoint(w http.ResponseWriter, r *http.Request){
 		// Handle Message
 		switch messageContent {
 			case "info":
-				message := fmt.Sprintf("There are currently %d player(s)", playerCount)
-				err = wsConn.WriteMessage(messageType, []byte(message))
+				
+				message := jsonifyData(map[string]string{
+					"type":    "info",
+					"message": fmt.Sprintf("There are currently %d player(s)", playerCount),
+				})
+				err = wsConn.WriteMessage(messageType, message)
 				if(err != nil){
 					log.Fatal(err)
 					return
