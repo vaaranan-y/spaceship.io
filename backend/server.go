@@ -106,6 +106,11 @@ func playerConnectionEndpoint(w http.ResponseWriter, r *http.Request){
 					game.Players[posnMsg.ID].PosX = posnMsg.X
 					game.Players[posnMsg.ID].PosY = posnMsg.Y
 				}
+
+				for _, player := range game.Players {
+					playerConn := player.Conn
+					playerConn.WriteMessage(websocket.TextMessage, jsonifyData(posnMsg))
+				}
 		}
 	}
 
