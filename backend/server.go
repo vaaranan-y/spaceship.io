@@ -126,21 +126,25 @@ func gameLoop(game *Game) {
 		
 		if(playerCount >= 3 && !alertStart){
 			alertStart = true
-			newPlayerAlertMessage := fmt.Sprintf("At least three players have joined, the game will begin momentarily!")
-			for _, player := range game.Players {
-				playerConn := player.Conn
-				playerConn.WriteMessage(websocket.TextMessage, []byte(newPlayerAlertMessage))
-			}
 			gameStarted = true
 			gameStartTime = time.Now().Add(5 * time.Second)
 		} else if(gameStarted && time.Now().After(gameStartTime)) {
-			playerPositionsMsg := "Players\n"
+
+
+			playerMap := make(map[string](map[string](float64)))
+
 			for _, player := range game.Players {
-				playerPositionsMsg += fmt.Sprintf("Player %v Coordinates: (%v, %v) ", player.ID, player.PosX, player.PosY)
+				coordinates := map[string]float64{
+					"x":player.PosX,
+					"y":player.PosY,
+				}
+				playerMap[fmt.Sprintf("Player %v", player.ID)] = coordinates
+				
 			}
+			playerPositionsMsg := jsonifyData(playerMap)
 			for _, player := range game.Players {
 				playerConn := player.Conn
-				playerConn.WriteMessage(websocket.TextMessage, []byte(playerPositionsMsg))
+				playerConn.WriteMessage(websocket.TextMessage, playerPositionsMsg)
 			}
 
 		}
