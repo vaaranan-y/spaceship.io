@@ -9,7 +9,7 @@ export default function App() {
   useEffect(() => {
     ws.current = new WebSocket("ws://localhost:8080/join");
     ws.current.onmessage = (event) => {
-      const message = event.data;
+      const message =  JSON.parse(event.data);
       console.log(message)
     }
     
