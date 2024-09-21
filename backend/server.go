@@ -27,6 +27,11 @@ type PositionMessage struct {
 	Y    float64 `json:"y"`
 }
 
+type PlayerPositions struct {
+	Type 	string					`json:"type"`
+	Players map[int64](map[string](float64))	`json:"players"`
+}
+
 func jsonifyData(message interface{}) []byte {
 	jsonMsg, err := json.Marshal(message)
     if err != nil {
@@ -130,17 +135,23 @@ func gameLoop(game *Game) {
 			gameStartTime = time.Now().Add(5 * time.Second)
 		} else if(gameStarted && time.Now().After(gameStartTime)) {
 
-
-			playerMap := make(map[string](map[string](float64)))
+			
+			playerMap := PlayerPositions{
+				Type: "PlayerPositions",
+				Players: make(map[int64](map[string](float64))),
+			}
+	
 
 			for _, player := range game.Players {
 				coordinates := map[string]float64{
 					"x":player.PosX,
 					"y":player.PosY,
 				}
-				playerMap[fmt.Sprintf("Player %v", player.ID)] = coordinates
+				playerMap.Players[player.ID] = coordinates
 				
 			}
+
+
 			playerPositionsMsg := jsonifyData(playerMap)
 			for _, player := range game.Players {
 				playerConn := player.Conn
