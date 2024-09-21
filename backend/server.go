@@ -129,7 +129,7 @@ func gameLoop(game *Game) {
 	for t := range tick {
 		fmt.Printf("Game Loop Update: %v\n", t)
 		
-		if(playerCount >= 3 && !alertStart){
+		if(playerCount >= 2 && !alertStart){
 			alertStart = true
 			gameStarted = true
 			gameStartTime = time.Now().Add(5 * time.Second)
