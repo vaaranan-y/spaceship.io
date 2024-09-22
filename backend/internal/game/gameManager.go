@@ -10,6 +10,7 @@ import (
 type GameManager struct {
 	Game *models.Game
 	Players []*models.Player  // Track connected players
+	PlayerCount int64
 	Mu      sync.Mutex        // Protect the player map for concurrency
 }
 
@@ -17,6 +18,7 @@ func CreateGameManager() *GameManager {
 	manager := &GameManager{
 		Game: models.CreateGame(),
 		Players: make([]*models.Player, 0),
+		PlayerCount: 0,
 	}
 	// Start the game loop as a goroutine
 	go manager.StartGameLoop()
