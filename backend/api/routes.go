@@ -49,11 +49,11 @@ func PlayerConnectionEndpoint(gameManager *gameManager.GameManager, w http.Respo
 		Conn: wsConn,
 	}
 
-	gameManager.Lock()
+	gameManager.Mu.Lock()
 	gameManager.Game.AddPlayer(newPlayer)
-	gameManager.Players = append(gameManager.players, newPlayer)
+	gameManager.Players = append(gameManager.Players, newPlayer)
 	gameManager.PlayerCount++
-	gameManager.Unlock()
+	gameManager.Mu.Unlock()
 	fmt.Printf("Player %v has joined!\n", newPlayer.ID)
 
 	if(gameManager.PlayerCount >= 3){
@@ -68,6 +68,8 @@ func PlayerConnectionEndpoint(gameManager *gameManager.GameManager, w http.Respo
 		}
 	}
 	
+	go handleMessages(newPlayer, gameManager)
+
 
 
 
@@ -115,4 +117,33 @@ func PlayerConnectionEndpoint(gameManager *gameManager.GameManager, w http.Respo
 	// }
 
 	// defer wsConn.Close()
+}
+
+func handleMessages(player *models.Player, gameManager *gameManager.GameManager) {
+	defer func() {
+		player.Conn.Close() // Ensure the connection is closed when done
+	}()
+
+	for {
+		_, msg, err := player.Conn.ReadMessage()
+		if err != nil {
+			fmt.Printf("Error reading message from player %v: %v\n", player.ID, err)
+			break // Exit loop on error
+		}
+
+		// Process the received message
+		fmt.Printf("Received message from player %v: %s\n", player.ID, msg)
+
+		// Here you can add logic to handle different message types
+		// For example, broadcast the message to other players
+		gameManager.Mu.Lock()
+		for _, otherPlayer := range gameManager.Players {
+			if otherPlayer.ID != player.ID { // Don't send back to the sender
+				if err := otherPlayer.Conn.WriteMessage(websocket.TextMessage, msg); err != nil {
+					fmt.Printf("Error sending message to player %v: %v\n", otherPlayer.ID, err)
+				}
+			}
+		}
+		gameManager.Mu.Unlock()
+	}
 }
