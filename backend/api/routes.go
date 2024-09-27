@@ -32,9 +32,11 @@ var upgrader = websocket.Upgrader{
 func PlayerConnectionEndpoint(gameManager *gameManager.GameManager, w http.ResponseWriter, r *http.Request){
 	// Create WebSocket Connection for Player
 	wsConn, err := upgrader.Upgrade(w, r, nil)
+
 	if(err != nil){
 		http.Error(w, "Unsupported Method", http.StatusNotFound)
 	} 
+
 	newPlayer := &models.Player{
 		ID: gameManager.PlayerCount,
 		NickName: "Temp",
@@ -47,19 +49,27 @@ func PlayerConnectionEndpoint(gameManager *gameManager.GameManager, w http.Respo
 		Conn: wsConn,
 	}
 
-	gameManager.PlayerCount += 1
-	newPlayerAlertMessage := jsonifyData(map[string]string{
-		"type":    "player_alert",
-		"message": "At least three players have joined, the game will begin momentarily!",
-	})
-
-	for _, player := range gameManager.Players {
-		playerConn := player.Conn
-		playerConn.WriteMessage(websocket.TextMessage, newPlayerAlertMessage)
-	}
-
+	gameManager.Lock()
 	gameManager.Game.AddPlayer(newPlayer)
+	gameManager.Players = append(gameManager.players, newPlayer)
+	gameManager.PlayerCount++
+	gameManager.Unlock()
 	fmt.Printf("Player %v has joined!\n", newPlayer.ID)
+
+	if(gameManager.PlayerCount >= 3){
+		newPlayerAlertMessage := jsonifyData(map[string]string{
+			"type":    "player_alert",
+			"message": "At least three players have joined, the game will begin momentarily!",
+		})
+	
+		for _, player := range gameManager.Players {
+			playerConn := player.Conn
+			playerConn.WriteMessage(websocket.TextMessage, newPlayerAlertMessage)
+		}
+	}
+	
+
+
 
 	// // Accept messages from the player
 	// for {
