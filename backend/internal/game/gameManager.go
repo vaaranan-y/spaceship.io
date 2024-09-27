@@ -49,7 +49,7 @@ func (gm *GameManager) StartGameLoop() {
 	ticker := time.Tick(1000*time.Millisecond) // 20 FPS (adjust as necessary)
 
 	for t := range ticker {
-		log.Printf("Hello world! %v\n", t)
+		log.Printf("Game message %v\n", t)
 		// gm.updateGameState()
 	}
 }
