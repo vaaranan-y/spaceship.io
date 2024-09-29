@@ -1,7 +1,7 @@
 package api
 import (
 	"fmt"
-	// "log"
+	"log"
 	"net/http"
 	"github.com/gorilla/websocket"
 	"spaceshipio/backend/internal/game"
@@ -13,6 +13,11 @@ import (
 	// "spaceshipio/backend/internal/game"
 	// "spaceshipio/backend/internal/api"
 )
+
+type Message struct {
+    Type string `json:"type"` // Use struct tags to match JSON keys
+    Message string `json:"message"` // Example additional field
+}
 
 func jsonifyData(message interface{}) []byte {
 	jsonMsg, err := json.Marshal(message)
@@ -37,6 +42,7 @@ func PlayerConnectionEndpoint(gameManager *gameManager.GameManager, w http.Respo
 		http.Error(w, "Unsupported Method", http.StatusNotFound)
 	} 
 
+	// Create Player
 	newPlayer := &models.Player{
 		ID: gameManager.PlayerCount,
 		NickName: "Temp",
@@ -49,6 +55,7 @@ func PlayerConnectionEndpoint(gameManager *gameManager.GameManager, w http.Respo
 		Conn: wsConn,
 	}
 
+	// Add player to game Manager
 	gameManager.Mu.Lock()
 	gameManager.Game.AddPlayer(newPlayer)
 	gameManager.Players = append(gameManager.Players, newPlayer)
@@ -56,6 +63,7 @@ func PlayerConnectionEndpoint(gameManager *gameManager.GameManager, w http.Respo
 	gameManager.Mu.Unlock()
 	fmt.Printf("Player %v has joined!\n", newPlayer.ID)
 
+	
 	if(gameManager.PlayerCount >= 3){
 		newPlayerAlertMessage := jsonifyData(map[string]string{
 			"type":    "player_alert",
@@ -125,23 +133,57 @@ func handleMessages(player *models.Player, gameManager *gameManager.GameManager)
 	}()
 
 	for {
-		_, msg, err := player.Conn.ReadMessage()
+		messageType, msg, err := player.Conn.ReadMessage()
 		if err != nil {
 			fmt.Printf("Error reading message from player %v: %v\n", player.ID, err)
 			break
 		}
 
 		// Process the received message
-		fmt.Printf("Received message from player %v: %s\n", player.ID, msg)
+		fmt.Printf("Received message from player %v\n", player.ID)
+		var unmarshalledMsg Message
+		json.Unmarshal(msg, &unmarshalledMsg)
+		receivedType := unmarshalledMsg.Type
 
 		gameManager.Mu.Lock()
-		// for _, otherPlayer := range gameManager.Players {
-		// 	if otherPlayer.ID != player.ID { // Don't send back to the sender
-		// 		if err := otherPlayer.Conn.WriteMessage(websocket.TextMessage, msg); err != nil {
-		// 			fmt.Printf("Error sending message to player %v: %v\n", otherPlayer.ID, err)
-		// 		}
-		// 	}
-		// }
+		switch receivedType {
+		case "info":
+			message := jsonifyData(map[string]string{
+				"type":    "info",
+				"message": fmt.Sprintf("There are currently %d player(s)", len(gameManager.Players)),
+			})
+			err = player.Conn.WriteMessage(messageType, message)
+			if(err != nil){
+				log.Fatal(err)
+				return
+			}
+		default:
+			message := jsonifyData(map[string]string{
+				"type":    "unknown",
+				"message": fmt.Sprintf("There are currently %d player(s)", len(gameManager.Players)),
+			})
+
+			err = player.Conn.WriteMessage(messageType, message)
+			if(err != nil){
+				log.Fatal(err)
+				return
+			}
+			// var posnMsg PositionMessage
+			// err = json.Unmarshal(p, &posnMsg)
+			// if err != nil {
+			// 	log.Println("Error: ", err)
+			// 	continue
+			// }
+			// if posnMsg.Type == "update_position" {
+			// 	game.Players[posnMsg.ID].PosX = posnMsg.X
+			// 	game.Players[posnMsg.ID].PosY = posnMsg.Y
+			// }
+
+			// for _, player := range game.Players {
+			// 	playerConn := player.Conn
+			// 	playerConn.WriteMessage(websocket.TextMessage, jsonifyData(posnMsg))
+			// }
+	}
 		gameManager.Mu.Unlock()
 	}
 }
