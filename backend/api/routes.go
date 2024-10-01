@@ -7,11 +7,6 @@ import (
 	"spaceshipio/backend/internal/game"
 	"spaceshipio/backend/internal/models"
 	"encoding/json"
-	// "time"
-	// "encoding/json"
-
-	// "spaceshipio/backend/internal/game"
-	// "spaceshipio/backend/internal/api"
 )
 
 type Message struct {
@@ -62,6 +57,7 @@ func PlayerConnectionEndpoint(gameManager *gameManager.GameManager, w http.Respo
 	gameManager.PlayerCount++
 	gameManager.Mu.Unlock()
 	fmt.Printf("Player %v has joined!\n", newPlayer.ID)
+	fmt.Printf("There are currently %v players in the game\n", gameManager.PlayerCount)
 
 	
 	if(gameManager.PlayerCount >= 3){
@@ -75,62 +71,11 @@ func PlayerConnectionEndpoint(gameManager *gameManager.GameManager, w http.Respo
 			playerConn.WriteMessage(websocket.TextMessage, newPlayerAlertMessage)
 		}
 	}
-	
 	go handleMessages(newPlayer, gameManager)
-
-
-
-
-	// // Accept messages from the player
-	// for {
-	// 	// Receive Message
-	// 	messageType, p, err := wsConn.ReadMessage()
-	// 	if err != nil {
-	// 		log.Fatal(err)
-	// 		return
-	// 	}
-	// 	fmt.Printf("Message Received: %s\n", p)
-	// 	messageContent := string(p)
-
-	// 	// Handle Message
-	// 	switch messageContent {
-	// 		case "info":
-				
-	// 			message := jsonifyData(map[string]string{
-	// 				"type":    "info",
-	// 				"message": fmt.Sprintf("There are currently %d player(s)", playerCount),
-	// 			})
-	// 			err = wsConn.WriteMessage(messageType, message)
-	// 			if(err != nil){
-	// 				log.Fatal(err)
-	// 				return
-	// 			}
-	// 		default:
-	// 			var posnMsg PositionMessage
-	// 			err = json.Unmarshal(p, &posnMsg)
-	// 			if err != nil {
-	// 				log.Println("Error: ", err)
-	// 				continue
-	// 			}
-	// 			if posnMsg.Type == "update_position" {
-	// 				game.Players[posnMsg.ID].PosX = posnMsg.X
-	// 				game.Players[posnMsg.ID].PosY = posnMsg.Y
-	// 			}
-
-	// 			for _, player := range game.Players {
-	// 				playerConn := player.Conn
-	// 				playerConn.WriteMessage(websocket.TextMessage, jsonifyData(posnMsg))
-	// 			}
-	// 	}
-	// }
-
-	// defer wsConn.Close()
 }
 
 func handleMessages(player *models.Player, gameManager *gameManager.GameManager) {
-	defer func() {
-		player.Conn.Close() // Ensure the connection is closed when done
-	}()
+	defer player.Conn.Close() 
 
 	for {
 		messageType, msg, err := player.Conn.ReadMessage()
@@ -157,10 +102,28 @@ func handleMessages(player *models.Player, gameManager *gameManager.GameManager)
 				log.Fatal(err)
 				return
 			}
+		case "positions":
+			positions := make(map[string]map[string]float64)
+			for _, p := range gameManager.Players {
+				positions[fmt.Sprintf("Player%d", p.ID)] = map[string]float64{
+					"x": p.PosX,
+					"y": p.PosY,
+				}
+			}
+			message := jsonifyData(map[string]interface{}{
+				"type":    "positions",
+				"message": positions,
+			})
+			
+			err = player.Conn.WriteMessage(messageType, message)
+			if(err != nil){
+				log.Fatal(err)
+				return
+			}
 		default:
 			message := jsonifyData(map[string]string{
 				"type":    "unknown",
-				"message": fmt.Sprintf("There are currently %d player(s)", len(gameManager.Players)),
+				"message": fmt.Sprintf("Message unknown"),
 			})
 
 			err = player.Conn.WriteMessage(messageType, message)
