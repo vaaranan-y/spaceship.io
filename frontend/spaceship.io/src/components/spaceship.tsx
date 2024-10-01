@@ -23,6 +23,13 @@ export default function Spaceship({ index, xPos, yPos }: SpaceshipProps) {
 
   const draw = (p5: p5Types) => {
     p5.background(index === 0 ? 200 : 100);
+
+     // let vel = index == 0 ? p5.createVector(p5.mouseX, p5.mouseY) : p5.createVector(x, y);
+    // vel.sub(p5.createVector(position.x, position.y))
+    // vel.setMag(maxSpeed)
+    // setPosition({x: position.x + vel.x, y: position.y + vel.y})
+
+    
     p5.fill(0);
     p5.rect(position.x, position.y, 50, 50); // Adjust size as needed
   };
