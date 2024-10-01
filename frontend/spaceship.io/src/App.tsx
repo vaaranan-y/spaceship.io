@@ -19,11 +19,12 @@ export default function App() {
 
   useEffect(() => {
     ws.current = new WebSocket("ws://localhost:8080/join");
+
     ws.current.onmessage = (event) => {
-      const message =  JSON.parse(event.data);
-      switch(message.type) {
-        case "PlayerPositions": {
-          setPlayers(Object.values(message.players))
+      const data =  JSON.parse(event.data);
+      switch(data.type) {
+        case "positions": {
+          setPlayers(Object.values(data.message))
         }
       }
     }
@@ -40,9 +41,8 @@ export default function App() {
     <div className="App">
       {
         players.map((player:playerInfo, index: number) => {
-          console.log(index, player)
           return (
-            <Spaceship index={index} x={player["x"]} y={player["y"]}/>
+            <Spaceship index={index} xPos={index*100} yPos={index*100}/>
           );
         })
       }

@@ -7,6 +7,7 @@ import (
 	"spaceshipio/backend/internal/game"
 	"spaceshipio/backend/internal/models"
 	"encoding/json"
+	"time"
 )
 
 type Message struct {
@@ -72,6 +73,7 @@ func PlayerConnectionEndpoint(gameManager *gameManager.GameManager, w http.Respo
 		}
 	}
 	go handleMessages(newPlayer, gameManager)
+	go sendPlayerPositions(newPlayer, gameManager)
 }
 
 func handleMessages(player *models.Player, gameManager *gameManager.GameManager) {
@@ -148,5 +150,36 @@ func handleMessages(player *models.Player, gameManager *gameManager.GameManager)
 			// }
 	}
 		gameManager.Mu.Unlock()
+	}
+}
+
+func sendPlayerPositions(player *models.Player, gameManager *gameManager.GameManager) {
+	ticker := time.NewTicker(time.Second / 60) // 60 times per second
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			gameManager.Mu.Lock()
+			positions := make(map[string]map[string]float64)
+			for _, p := range gameManager.Players {
+				positions[fmt.Sprintf("Player%d", p.ID)] = map[string]float64{
+					"x": p.PosX,
+					"y": p.PosY,
+				}
+			}
+			message := jsonifyData(map[string]interface{}{
+				"type":    "positions",
+				"message": positions,
+			})
+
+			err := player.Conn.WriteMessage(websocket.TextMessage, message)
+			if err != nil {
+				log.Fatal(err)
+				gameManager.Mu.Unlock()
+				return
+			}
+			gameManager.Mu.Unlock()
+		}
 	}
 }
