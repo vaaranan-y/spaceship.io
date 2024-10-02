@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import Spaceship from './components/spaceship';
+import GameArea from './components/gamearea';
 import './App.css';
 
 interface coordinates {
@@ -14,6 +14,7 @@ interface playerInfo {
 }
 
 export default function App() {
+  const [playerId, setPlayerId] = useState<number>(0);
   const [players, setPlayers]  = useState<any>([])
   const ws = useRef<WebSocket | null>(null);
 
@@ -25,6 +26,12 @@ export default function App() {
       switch(data.type) {
         case "positions": {
           setPlayers(Object.values(data.message))
+          break
+        }
+        case "player_data": {
+          setPlayerId(Number(data.message))
+          console.log("VAARANAN: ", Number(data.message))
+          break;
         }
       }
     }
@@ -40,11 +47,7 @@ export default function App() {
   return (
     <div className="App">
       {
-        players.map((player:playerInfo, index: number) => {
-          return (
-            <Spaceship index={index} xPos={index*100} yPos={index*100}/>
-          );
-        })
+        <GameArea players={players} playerId={playerId}/>
       }
     </div>
   );

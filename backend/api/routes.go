@@ -8,6 +8,7 @@ import (
 	"spaceshipio/backend/internal/models"
 	"encoding/json"
 	"time"
+	"strconv"
 )
 
 type Message struct {
@@ -59,6 +60,12 @@ func PlayerConnectionEndpoint(gameManager *gameManager.GameManager, w http.Respo
 	gameManager.Mu.Unlock()
 	fmt.Printf("Player %v has joined!\n", newPlayer.ID)
 	fmt.Printf("There are currently %v players in the game\n", gameManager.PlayerCount)
+
+	newPlayerData := jsonifyData(map[string]string{
+		"type":    "player_data",
+		"message": strconv.FormatInt(newPlayer.ID, 10),
+	})
+	newPlayer.Conn.WriteMessage(websocket.TextMessage, newPlayerData)
 
 	
 	if(gameManager.PlayerCount >= 3){
