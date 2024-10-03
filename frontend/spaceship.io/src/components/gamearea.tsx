@@ -53,7 +53,7 @@ export default function GameArea({ players, playerId }: GameAreaProps) {
       vel.sub(p5.createVector(position.x, position.y))
       vel.setMag(maxSpeed)
       setPosition({x: position.x + vel.x, y: position.y + vel.y})
-      p5.fill(index === 0 ? 125 : 0); // Change color based on player
+      p5.fill(125); // Change color based on player
       p5.rect(index == playerId ? p5.mouseX + vel.x : 0, index == playerId ? p5.mouseY + vel.y : 0, 50, 50); // Draw the spaceship
     });
   };
