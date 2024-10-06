@@ -13,6 +13,7 @@ type Player struct {
 	Health int64
 	Damage int64
 	Alive bool
+	Color string
 	Conn *websocket.Conn
 }
 

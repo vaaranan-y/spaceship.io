@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"time"
 	"strconv"
+	"math/rand"
 )
 
 type Message struct {
@@ -49,6 +50,7 @@ func PlayerConnectionEndpoint(gameManager *gameManager.GameManager, w http.Respo
 		Health: 100,
 		Damage: 5,
 		Alive: true,
+		Color: fmt.Sprintf("#%06x", rand.Intn(0xFFFFFF)),
 		Conn: wsConn,
 	}
 
@@ -169,15 +171,20 @@ func sendPlayerPositions(player *models.Player, gameManager *gameManager.GameMan
 		case <-ticker.C:
 			gameManager.Mu.Lock()
 			positions := make(map[string]map[string]float64)
+			colors := make(map[string]string)
 			for _, p := range gameManager.Players {
 				positions[fmt.Sprintf("Player%d", p.ID)] = map[string]float64{
 					"x": p.PosX,
 					"y": p.PosY,
 				}
 			}
+			for _, p := range gameManager.Players {
+				colors[fmt.Sprintf("Player%d", p.ID)] = p.Color
+			}
 			message := jsonifyData(map[string]interface{}{
 				"type":    "positions",
 				"message": positions,
+				"colors": colors,
 			})
 
 			err := player.Conn.WriteMessage(websocket.TextMessage, message)

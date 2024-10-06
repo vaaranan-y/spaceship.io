@@ -16,6 +16,7 @@ interface playerInfo {
 export default function App() {
   const [playerId, setPlayerId] = useState<number>(0);
   const [players, setPlayers]  = useState<any>([])
+  const [colors, setColors]  = useState<any>([])
   const ws = useRef<WebSocket | null>(null);
 
   useEffect(() => {
@@ -25,12 +26,14 @@ export default function App() {
       const data =  JSON.parse(event.data);
       switch(data.type) {
         case "positions": {
-          setPlayers(Object.values(data.message))
+          console.log("POSITIONS: ", data);
+          setPlayers(Object.values(data.message));
+          setColors(Object.values(data.colors));
           break
         }
         case "player_data": {
           setPlayerId(Number(data.message))
-          console.log("VAARANAN: ", Number(data.message))
+          console.log("VAARANAN: ", data);
           break;
         }
       }
@@ -44,10 +47,11 @@ export default function App() {
       console.log('WebSocket Connection Error!')
     }
   }, [])
+
   return (
     <div className="App">
       {
-        <GameArea players={players} playerId={playerId}/>
+        <GameArea players={players} playerId={playerId} colors={colors}/>
       }
     </div>
   );
