@@ -38,6 +38,16 @@ export default function App() {
         }
       }
     }
+
+    // // I want to send the player's position to the server
+    // const sendPlayerPosition = (position: coordinates) => {
+    //   if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+    //   ws.current.send(JSON.stringify({ type: 'player_position', position }));
+    //   }
+    // };
+
+    // // Example usage: sending a dummy position
+    // sendPlayerPosition({ x: 100, y: 200 });
     
     ws.current.onopen = () => {
       console.log('WebSocket Connection Opened')
@@ -46,12 +56,14 @@ export default function App() {
     ws.current.onerror = () => {
       console.log('WebSocket Connection Error!')
     }
+
+
   }, [])
 
   return (
     <div className="App">
       {
-        <GameArea players={players} playerId={playerId} colors={colors}/>
+        <GameArea players={players} playerId={playerId} colors={colors} ws={ws}/>
       }
     </div>
   );

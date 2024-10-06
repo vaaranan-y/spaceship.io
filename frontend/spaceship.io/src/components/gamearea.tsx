@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { MutableRefObject, useEffect, useState } from 'react';
 import Sketch from 'react-p5';
 import p5Types from 'p5'; // Import this for type hinting
 
@@ -12,9 +12,10 @@ interface GameAreaProps {
   ];
   playerId: number;
   colors: [string];
+  ws: MutableRefObject<WebSocket | null>;
 }
 
-export default function GameArea({ players, playerId, colors }: GameAreaProps) {
+export default function GameArea({ players, playerId, colors, ws }: GameAreaProps) {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const maxSpeed = 3;
 
@@ -31,6 +32,9 @@ export default function GameArea({ players, playerId, colors }: GameAreaProps) {
       p5.fill(colors[index]);
       if(index == playerId) {
         p5.rect(p5.mouseX, p5.mouseY, 50, 50);
+        if (ws.current) {
+          ws.current.send(JSON.stringify({ type: 'update_position', message: JSON.stringify({ id: playerId, x: p5.mouseX, y: p5.mouseY }) }));
+        }
       } else {
         p5.rect(player.x, player.y, 50, 50);
       }

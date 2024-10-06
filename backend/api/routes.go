@@ -114,6 +114,7 @@ func handleMessages(player *models.Player, gameManager *gameManager.GameManager)
 				return
 			}
 		case "positions":
+			fmt.Printf("Here 1\n")
 			positions := make(map[string]map[string]float64)
 			for _, p := range gameManager.Players {
 				positions[fmt.Sprintf("Player%d", p.ID)] = map[string]float64{
@@ -131,7 +132,26 @@ func handleMessages(player *models.Player, gameManager *gameManager.GameManager)
 				log.Fatal(err)
 				return
 			}
+		case "update_position":
+			var posData map[string]interface{}
+			err := json.Unmarshal([]byte(unmarshalledMsg.Message), &posData)
+			if err != nil {
+				fmt.Printf("Error unmarshalling position data: %v\n", err)
+				break
+			}
+
+			id := int(posData["id"].(float64))
+			x := posData["x"].(float64)
+			y := posData["y"].(float64)
+
+			// Update the player's position
+			gameManager.Players[id].PosX = x
+			gameManager.Players[id].PosY = y
+			fmt.Printf("Here 3\n")
+
+			
 		default:
+			fmt.Printf("Here 2\n")
 			message := jsonifyData(map[string]string{
 				"type":    "unknown",
 				"message": fmt.Sprintf("Message unknown"),
