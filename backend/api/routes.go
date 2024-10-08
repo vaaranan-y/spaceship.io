@@ -97,9 +97,16 @@ func handleMessages(player *models.Player, gameManager *gameManager.GameManager)
 
 		// Process the received message
 		fmt.Printf("Received message from player %v\n", player.ID)
-		var unmarshalledMsg Message
+
+		var unmarshalledMsg map[string]interface{}
 		json.Unmarshal(msg, &unmarshalledMsg)
-		receivedType := unmarshalledMsg.Type
+		receivedType, ok := unmarshalledMsg["type"].(string); 
+
+		if ok {
+			fmt.Println("receivedType:", receivedType)
+		} else {
+			fmt.Println("receivedType not found or not a string")
+		}
 
 		gameManager.Mu.Lock()
 		switch receivedType {
@@ -133,13 +140,13 @@ func handleMessages(player *models.Player, gameManager *gameManager.GameManager)
 				return
 			}
 		case "update_position":
-			var posData map[string]interface{}
-			err := json.Unmarshal([]byte(unmarshalledMsg.Message), &posData)
-			if err != nil {
-				fmt.Printf("Error unmarshalling position data: %v\n", err)
-				break
-			}
-
+			posData := unmarshalledMsg["message"].(map[string]interface{})
+			
+			// posDataMap, ok := posData.(map[string]interface{})
+			// if !ok {
+			// 	fmt.Printf("Error: posData is not a map[string]interface{}\n")
+			// 	continue
+			// }
 			id := int(posData["id"].(float64))
 			x := posData["x"].(float64)
 			y := posData["y"].(float64)
@@ -147,8 +154,6 @@ func handleMessages(player *models.Player, gameManager *gameManager.GameManager)
 			// Update the player's position
 			gameManager.Players[id].PosX = x
 			gameManager.Players[id].PosY = y
-			fmt.Printf("Here 3\n")
-
 			
 		default:
 			fmt.Printf("Here 2\n")

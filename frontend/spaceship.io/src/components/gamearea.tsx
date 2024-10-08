@@ -33,7 +33,7 @@ export default function GameArea({ players, playerId, colors, ws }: GameAreaProp
       if(index == playerId) {
         p5.rect(p5.mouseX, p5.mouseY, 50, 50);
         if (ws.current) {
-          ws.current.send(JSON.stringify({ type: 'update_position', message: JSON.stringify({ id: playerId, x: p5.mouseX, y: p5.mouseY }) }));
+          ws.current.send(JSON.stringify({ type: 'update_position', message: { id: playerId, x: p5.mouseX, y: p5.mouseY } }));
         }
       } else {
         p5.rect(player.x, player.y, 50, 50);
