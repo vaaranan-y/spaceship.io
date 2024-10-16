@@ -140,13 +140,12 @@ func handleMessages(player *models.Player, gameManager *gameManager.GameManager)
 				return
 			}
 		case "update_position":
-			posData := unmarshalledMsg["message"].(map[string]interface{})
+			posData, ok := unmarshalledMsg["message"].(map[string]interface{})
 			
-			// posDataMap, ok := posData.(map[string]interface{})
-			// if !ok {
-			// 	fmt.Printf("Error: posData is not a map[string]interface{}\n")
-			// 	continue
-			// }
+			if !ok {
+				fmt.Printf("Error: posData is not a map[string]interface{}\n")
+				continue
+			}
 			id := int(posData["id"].(float64))
 			x := posData["x"].(float64)
 			y := posData["y"].(float64)
