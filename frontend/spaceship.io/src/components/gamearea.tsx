@@ -63,26 +63,42 @@ export default function GameArea({ players, playerId, colors, ws }: GameAreaProp
 
     // Move and draw bullets
     setBullets((prevBullets) => {
-      return prevBullets.map((bullet) => {
+      let currBullets = prevBullets.map((bullet) => {
         const newX = bullet.x + bullet.dx;
         const newY = bullet.y + bullet.dy;
 
         // Check for collisions with other players
-        players.forEach((player) => {
-          if (player.id !== playerId && newX >= player.x && newX <= player.x + 50 && newY >= player.y && newY <= player.y + 50) {
+        let hasHit = false;
+        players.forEach((player, index) => {
+          if (index !== playerId && newX >= player.x && newX <= player.x + 50 && newY >= player.y && newY <= player.y + 50) {
             // Send collision information to the WebSocket
             if (ws.current) {
-              ws.current.send(JSON.stringify({ type: 'bullet_hit', message: { shooterId: playerId, targetId: player.id } }));
+              ws.current.send(JSON.stringify({ type: 'bullet_hit', message: { shooterId: playerId, targetId: index } }));
             }
+            hasHit = true;
           }
         });
 
-        return { ...bullet, x: newX, y: newY };
+        if (hasHit) {
+          return null; // Mark bullet for removal
+        } else {
+          return { ...bullet, x: newX, y: newY };
+        }
+      }).filter((bullet): bullet is Bullet => bullet !== null); // Filter out null values
+
+      return currBullets.filter((bullet) => {
+        // Remove bullets that are out of bounds or have hit a player
+        if (bullet.x < 0 || bullet.x > p5.width || bullet.y < 0 || bullet.y > p5.height) {
+          return false;
+        }
+        return true;
       });
     });
 
     bullets.forEach((bullet) => {
-      p5.ellipse(bullet.x, bullet.y, 10, 10);
+      if (bullet) {
+        p5.ellipse(bullet.x, bullet.y, 10, 10);
+      }
     });
   };
 

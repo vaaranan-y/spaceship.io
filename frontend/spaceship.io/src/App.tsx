@@ -26,7 +26,7 @@ export default function App() {
       const data =  JSON.parse(event.data);
       switch(data.type) {
         case "positions": {
-          console.log("POSITIONS: ", data);
+          // console.log("POSITIONS: ", data);
           setPlayers(Object.values(data.message));
           setColors(Object.values(data.colors));
           break
@@ -34,6 +34,16 @@ export default function App() {
         case "player_data": {
           setPlayerId(Number(data.message))
           console.log("VAARANAN: ", data);
+          break;
+        }
+        case "take_hit": {
+          console.log("TAKE HIT: ", data);
+          let oldColor = colors[playerId];
+          colors[playerId] = "red";
+          setTimeout(() => {
+            colors[playerId] = oldColor;
+          }, 200);
+          
           break;
         }
       }

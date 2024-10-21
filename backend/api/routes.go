@@ -96,17 +96,17 @@ func handleMessages(player *models.Player, gameManager *gameManager.GameManager)
 		}
 
 		// Process the received message
-		fmt.Printf("Received message from player %v\n", player.ID)
+		// fmt.Printf("Received message from player %v\n", player.ID)
 
 		var unmarshalledMsg map[string]interface{}
 		json.Unmarshal(msg, &unmarshalledMsg)
-		receivedType, ok := unmarshalledMsg["type"].(string); 
+		receivedType := unmarshalledMsg["type"].(string); 
 
-		if ok {
-			fmt.Println("receivedType:", receivedType)
-		} else {
-			fmt.Println("receivedType not found or not a string")
-		}
+		// if ok {
+		// 	fmt.Println("receivedType:", receivedType)
+		// } else {
+		// 	fmt.Println("receivedType not found or not a string")
+		// }
 
 		gameManager.Mu.Lock()
 		switch receivedType {
@@ -121,7 +121,6 @@ func handleMessages(player *models.Player, gameManager *gameManager.GameManager)
 				return
 			}
 		case "positions":
-			fmt.Printf("Here 1\n")
 			positions := make(map[string]map[string]float64)
 			for _, p := range gameManager.Players {
 				positions[fmt.Sprintf("Player%d", p.ID)] = map[string]float64{
@@ -154,8 +153,18 @@ func handleMessages(player *models.Player, gameManager *gameManager.GameManager)
 			gameManager.Players[id].PosX = x
 			gameManager.Players[id].PosY = y
 			
+		
+		case "bullet_hit":
+			bulletData := unmarshalledMsg["message"].(map[string]interface{})
+			fmt.Printf("AHHHH %v GOT HIT BY A BULLET\n", bulletData["targetId"]);
+
+			message := jsonifyData(map[string]interface{}{
+				"type":    "take_hit",
+			})
+			
+			err = player.Conn.WriteMessage(messageType, message)
+			// gameManager.Players[bulletData["targetId"]].Health -= 10
 		default:
-			fmt.Printf("Here 2\n")
 			message := jsonifyData(map[string]string{
 				"type":    "unknown",
 				"message": fmt.Sprintf("Message unknown"),
