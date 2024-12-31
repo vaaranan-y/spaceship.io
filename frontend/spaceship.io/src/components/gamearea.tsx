@@ -3,13 +3,8 @@ import Sketch from 'react-p5';
 import p5Types from 'p5';
 
 interface GameAreaProps {
-  players: Array<{
-    id: number;
-    x: number;
-    y: number;
-  }>;
+  players: Array<any>;
   playerId: number;
-  colors: Array<string>;
   ws: MutableRefObject<WebSocket | null>;
 }
 
@@ -20,7 +15,7 @@ interface Bullet {
   dy: number;
 }
 
-export default function GameArea({ players, playerId, colors, ws }: GameAreaProps) {
+export default function GameArea({ players, playerId, ws }: GameAreaProps) {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [bullets, setBullets] = useState<Bullet[]>([]);
   const maxSpeed = 0.01; // Lower value for smooth movement
@@ -38,9 +33,10 @@ export default function GameArea({ players, playerId, colors, ws }: GameAreaProp
     p5.background(200);
 
     players.forEach((player, index) => {
-      p5.fill(colors[index]);
-
-      if (index === playerId) {
+      p5.fill(player.Color);
+      console.log(playerId, player.ID);
+      if (player.ID == playerId) {
+        
         const targetX = p5.mouseX;
         const targetY = p5.mouseY;
 
@@ -53,62 +49,62 @@ export default function GameArea({ players, playerId, colors, ws }: GameAreaProp
 
         // Send updated position to the WebSocket
         if (ws.current) {
-          ws.current.send(JSON.stringify({ type: 'update_position', message: { id: playerId, x: newX, y: newY } }));
+          ws.current.send(JSON.stringify({ type: 'update_position', message: { x: newX, y: newY } }));
         }
       } else {
         // Draw other players at their positions
-        p5.rect(player.x, player.y, 50, 50);
+        p5.rect(player.PosX, player.PosY, 50, 50);
       }
     });
 
-    // Move and draw bullets
-    setBullets((prevBullets) => {
-      let currBullets = prevBullets.map((bullet) => {
-        const newX = bullet.x + bullet.dx;
-        const newY = bullet.y + bullet.dy;
+    // // Move and draw bullets
+    // setBullets((prevBullets) => {
+    //   let currBullets = prevBullets.map((bullet) => {
+    //     const newX = bullet.x + bullet.dx;
+    //     const newY = bullet.y + bullet.dy;
 
-        // Check for collisions with other players
-        let hasHit = false;
-        players.forEach((player, index) => {
-          if (index !== playerId && newX >= player.x && newX <= player.x + 50 && newY >= player.y && newY <= player.y + 50) {
-            // Send collision information to the WebSocket
-            if (ws.current) {
-              ws.current.send(JSON.stringify({ type: 'bullet_hit', message: { shooterId: playerId, targetId: index } }));
-            }
-            hasHit = true;
-          }
-        });
+    //     // Check for collisions with other players
+    //     let hasHit = false;
+    //     players.forEach((player, index) => {
+    //       if (index !== playerId && newX >= player.x && newX <= player.x + 50 && newY >= player.y && newY <= player.y + 50) {
+    //         // Send collision information to the WebSocket
+    //         if (ws.current) {
+    //           ws.current.send(JSON.stringify({ type: 'bullet_hit', message: { shooterId: playerId, targetId: index } }));
+    //         }
+    //         hasHit = true;
+    //       }
+    //     });
 
-        if (hasHit) {
-          return null; // Mark bullet for removal
-        } else {
-          return { ...bullet, x: newX, y: newY };
-        }
-      }).filter((bullet): bullet is Bullet => bullet !== null); // Filter out null values
+    //     if (hasHit) {
+    //       return null; // Mark bullet for removal
+    //     } else {
+    //       return { ...bullet, x: newX, y: newY };
+    //     }
+    //   }).filter((bullet): bullet is Bullet => bullet !== null); // Filter out null values
 
-      return currBullets.filter((bullet) => {
-        // Remove bullets that are out of bounds or have hit a player
-        if (bullet.x < 0 || bullet.x > p5.width || bullet.y < 0 || bullet.y > p5.height) {
-          return false;
-        }
-        return true;
-      });
-    });
+    //   return currBullets.filter((bullet) => {
+    //     // Remove bullets that are out of bounds or have hit a player
+    //     if (bullet.x < 0 || bullet.x > p5.width || bullet.y < 0 || bullet.y > p5.height) {
+    //       return false;
+    //     }
+    //     return true;
+    //   });
+    // });
 
-    bullets.forEach((bullet) => {
-      if (bullet) {
-        p5.ellipse(bullet.x, bullet.y, 10, 10);
-      }
-    });
+    // bullets.forEach((bullet) => {
+    //   if (bullet) {
+    //     p5.ellipse(bullet.x, bullet.y, 10, 10);
+    //   }
+    // });
   };
 
   const mousePressed = (p5: p5Types) => {
-    const angle = Math.atan2(p5.mouseY - positionRef.current.y, p5.mouseX - positionRef.current.x);
-    const speed = 5;
-    const dx = Math.cos(angle) * speed;
-    const dy = Math.sin(angle) * speed;
+    // const angle = Math.atan2(p5.mouseY - positionRef.current.y, p5.mouseX - positionRef.current.x);
+    // const speed = 5;
+    // const dx = Math.cos(angle) * speed;
+    // const dy = Math.sin(angle) * speed;
 
-    setBullets((prevBullets) => [...prevBullets, { x: positionRef.current.x, y: positionRef.current.y, dx, dy }]);
+    // setBullets((prevBullets) => [...prevBullets, { x: positionRef.current.x, y: positionRef.current.y, dx, dy }]);
   };
 
   return <Sketch setup={setup} draw={draw} mousePressed={mousePressed} />;
